@@ -14,6 +14,7 @@ import { metrics } from '../../metrics/server';
 import { hasPermission, hasAllPermission } from '../../authorization/server';
 import { getDefaultUserFields } from '../../utils/server/functions/getDefaultUserFields';
 import { checkCodeForUser } from '../../2fa/server/code';
+import { asyncMethodCallContextStore } from '../../models/server/asyncMethodCallContext';
 
 const logger = new Logger('API');
 
@@ -421,6 +422,9 @@ export class APIClass extends Restivus {
 							options: _options,
 							connection,
 						});
+
+						const store = new Set([{ type: 'rest', route: this.request.route, method: this.request.method, userId: this.userId }]);
+						asyncMethodCallContextStore.enterWith(store);
 
 						result = DDP._CurrentInvocation.withValue(invocation, () => Promise.await(originalAction.apply(this))) || API.v1.success();
 

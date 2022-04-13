@@ -119,6 +119,18 @@ metrics.pushQueue = new client.Gauge({
 	help: 'push queue',
 });
 
+metrics.collectionsByTime = new client.Gauge({
+	name: 'rocketchat_collections_time',
+	help: 'summary of collections times',
+	labelNames: ['collection', 'command', 'caller'],
+});
+
+metrics.collectionsByRecord = new client.Gauge({
+	name: 'rocketchat_collections_record',
+	help: 'summary of collections records',
+	labelNames: ['collection', 'command', 'caller'],
+});
+
 // User statistics
 metrics.totalUsers = new client.Gauge({ name: 'rocketchat_users_total', help: 'total of users' });
 metrics.activeUsers = new client.Gauge({

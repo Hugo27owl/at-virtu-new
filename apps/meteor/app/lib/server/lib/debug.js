@@ -7,6 +7,7 @@ import { settings } from '../../../settings/server';
 import { metrics } from '../../../metrics/server';
 import { Logger } from '../../../../server/lib/logger/Logger';
 import { getMethodArgs } from '../../../../server/lib/logger/logPayloads';
+import { asyncMethodCallContextStore } from '../../../models/server/asyncMethodCallContext';
 
 const logger = new Logger('Meteor');
 
@@ -70,6 +71,9 @@ const wrapMethods = function (name, originalHandler, methodsMap) {
 			instanceId: InstanceStatus.id(),
 			...getMethodArgs(name, originalArgs),
 		});
+
+		const store = new Set([{ type: 'ddp', method: name, userId: this.userId }]);
+		asyncMethodCallContextStore.enterWith(store);
 
 		const result = originalHandler.apply(this, originalArgs);
 		end();

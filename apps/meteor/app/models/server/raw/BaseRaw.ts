@@ -23,6 +23,7 @@ import {
 	WriteOpResult,
 } from 'mongodb';
 
+import { traceInstanceMethods } from '../asyncMethodCallContext';
 import { IRocketChatRecord, RocketChatRecordDeleted } from '../../../../definition/IRocketChatRecord';
 import { setUpdatedAt } from '../lib/setUpdatedAt';
 
@@ -90,6 +91,8 @@ export class BaseRaw<T, C extends DefaultFields<T> = undefined> implements IBase
 		}
 
 		this.preventSetUpdatedAt = options?.preventSetUpdatedAt ?? false;
+
+		return traceInstanceMethods(this, ['_ensureDefaultFields']);
 	}
 
 	private doNotMixInclusionAndExclusionFields(options: FindOneOptions<T> = {}): FindOneOptions<T> {
