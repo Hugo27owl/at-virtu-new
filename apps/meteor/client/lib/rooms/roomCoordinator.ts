@@ -1,15 +1,13 @@
 import type { IRoom, RoomType, IUser, AtLeast, ValueOf } from '@rocket.chat/core-typings';
 import { FlowRouter } from 'meteor/kadira:flow-router';
 import type { RouteOptions } from 'meteor/kadira:flow-router';
-import _ from 'underscore';
 
 import { hasPermission } from '../../../app/authorization/client';
-import { ChatRoom, ChatSubscription } from '../../../app/models/client';
+import { ChatRoom, Subscriptions } from '../../../app/models/client';
 import { openRoom } from '../../../app/ui-utils/client/lib/openRoom';
 import { RoomSettingsEnum, RoomMemberActions, UiTextContext } from '../../../definition/IRoomTypeConfig';
 import type { IRoomTypeConfig, IRoomTypeClientDirectives, RoomIdentification } from '../../../definition/IRoomTypeConfig';
 import { RoomCoordinator } from '../../../lib/rooms/coordinator';
-import { roomExit } from './roomExit';
 
 class RoomCoordinatorClient extends RoomCoordinator {
 	add(roomConfig: IRoomTypeConfig, directives: Partial<IRoomTypeClientDirectives>): void {
@@ -51,7 +49,7 @@ class RoomCoordinatorClient extends RoomCoordinator {
 				return false;
 			},
 			canSendMessage(rid: string): boolean {
-				return ChatSubscription.find({ rid }).count() > 0;
+				return Subscriptions.find({ rid }).count() > 0;
 			},
 			...directives,
 			config: roomConfig,
@@ -59,7 +57,7 @@ class RoomCoordinatorClient extends RoomCoordinator {
 	}
 
 	protected addRoute(path: string, routeConfig: RouteOptions): void {
-		super.addRoute(path, { ...routeConfig, triggersExit: [roomExit] });
+		super.addRoute(path, { ...routeConfig });
 	}
 
 	getRoomDirectives(roomType: string): IRoomTypeClientDirectives | undefined {
@@ -177,12 +175,6 @@ class RoomCoordinatorClient extends RoomCoordinator {
 		}
 
 		return Boolean(this.getRoomDirectives(room.t)?.canSendMessage(rid));
-	}
-
-	getSortedTypes(): Array<{ config: IRoomTypeConfig; directives: IRoomTypeClientDirectives }> {
-		return _.sortBy(this.roomTypesOrder, 'order')
-			.map((type) => this.roomTypes[type.identifier] as { config: IRoomTypeConfig; directives: IRoomTypeClientDirectives })
-			.filter((type) => type.directives.condition());
 	}
 }
 
