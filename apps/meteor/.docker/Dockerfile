@@ -1,41 +1,26 @@
-FROM node:14.21.2-bullseye-slim
+FROM node:14.21.2-alpine3.16
+
+RUN apk add --no-cache ttf-dejavu
+
+ADD . /app
 
 LABEL maintainer="buildmaster@rocket.chat"
 
-# dependencies
-RUN groupadd -g 65533 -r rocketchat \
-    && useradd -u 65533 -r -g rocketchat rocketchat \
-    && mkdir -p /app/uploads \
-    && chown rocketchat:rocketchat /app/uploads \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends fontconfig
-
-# --chown requires Docker 17.12 and works only on Linux
-ADD --chown=rocketchat:rocketchat . /app
-
-RUN aptMark="$(apt-mark showmanual)" \
-    && apt-get install -y --no-install-recommends g++ make python ca-certificates \
+RUN set -x \
+    && apk add --no-cache --virtual .fetch-deps python3 make g++ libc6-compat \
     && cd /app/bundle/programs/server \
-    && npm install \
-    && apt-mark auto '.*' > /dev/null \
-    && apt-mark manual $aptMark > /dev/null \
-    && find /usr/local -type f -executable -exec ldd '{}' ';' \
-    | awk '/=>/ { print $(NF-1) }' \
-    | sort -u \
-    | xargs -r dpkg-query --search \
-    | cut -d: -f1 \
-    | sort -u \
-    | xargs -r apt-mark manual \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-    && npm cache clear --force
+    && npm install --production \
+    # Start hack for sharp...
+    && rm -rf npm/node_modules/sharp \
+    && npm install sharp@0.30.4 \
+    && mv node_modules/sharp npm/node_modules/sharp \
+    # End hack for sharp
+    && cd npm \
+    && npm rebuild bcrypt --build-from-source \
+    && npm cache clear --force \
+    && apk del .fetch-deps
 
-USER rocketchat
-
-VOLUME /app/uploads
-
-WORKDIR /app/bundle
-
-# needs a mongoinstance - defaults to container linking with alias 'mongo'
+# needs a mongo instance - defaults to container linking with alias 'mongo'
 ENV DEPLOY_METHOD=docker \
     NODE_ENV=production \
     MONGO_URL=mongodb://mongo:27017/rocketchat \
@@ -43,6 +28,10 @@ ENV DEPLOY_METHOD=docker \
     PORT=3000 \
     ROOT_URL=http://localhost:3000 \
     Accounts_AvatarStorePath=/app/uploads
+
+VOLUME /app/uploads
+
+WORKDIR /app/bundle
 
 EXPOSE 3000
 
