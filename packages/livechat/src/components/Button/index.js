@@ -5,37 +5,33 @@ import styles from './styles.scss';
 
 const handleMouseUp = ({ target }) => target.blur();
 
-export const Button = withTranslation()(
-	memo(
-		({
-			submit,
-			disabled,
-			outline,
-			nude,
-			danger,
-			secondary,
-			stack,
-			small,
-			loading,
-			badge,
-			icon,
-			onClick,
-			className,
-			style = {},
-			children,
-			img,
-			t,
-		}) => (
-			<button
-				type={submit ? 'submit' : 'button'}
-				disabled={disabled}
-				onClick={onClick}
-				onMouseUp={handleMouseUp}
-				aria-label={icon ? children[0] : null}
-				className={createClassName(
-					styles,
-					'button',
-					{
+export const Button = memo(({
+	submit,
+	disabled,
+	outline,
+	nude,
+	danger,
+	secondary,
+	stack,
+	small,
+	loading,
+	badge,
+	icon,
+	onClick,
+	className,
+	style = {},
+	children,
+	img,
+  t,
+	label,
+}) => (
+	<button
+		type={submit ? 'submit' : 'button'}
+		disabled={disabled}
+		onClick={onClick}
+		onMouseUp={handleMouseUp}
+		aria-label={label || (icon ? children[0] : null)}
+		className={createClassName(styles, 'button', {
 						disabled,
 						outline,
 						nude,

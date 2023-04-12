@@ -1,9 +1,10 @@
 import { formatDistance } from 'date-fns';
 import format from 'date-fns/format';
 import isToday from 'date-fns/isToday';
+import { parseISO } from 'date-fns/fp';
 import { withTranslation } from 'react-i18next';
-
-import { getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate } from '../../helpers';
+import i18next from 'i18next';
+import { getAttachmentUrl, memo, normalizeTransferHistoryMessage, resolveDate, createClassName } from '../../helpers';
 import { default as AudioAttachment } from '../AudioAttachment';
 import { FileAttachment } from '../FileAttachment';
 import { ImageAttachment } from '../ImageAttachment';
@@ -27,10 +28,32 @@ import {
 	MESSAGE_TYPE_LIVECHAT_TRANSFER_HISTORY,
 	MESSAGE_WEBRTC_CALL,
 } from '../constants';
+import styles from './styles.scss';
 
-const renderContent = ({ text, system, quoted, me, blocks, attachments, attachmentResolver, mid, rid }) =>
-	[
-		...(attachments || []).map(
+const parseDate = (time) => {
+	const timestamp = new Date(time).toISOString();
+	return i18next.t('message_time', {
+		val: new Date(timestamp),
+		formatParams: {
+			val: isToday(parseISO(timestamp)) ? { hour: 'numeric', minute: 'numeric' } : { day: 'numeric', hour: 'numeric', minute: 'numeric' },
+		},
+	});
+};
+
+const renderContent = ({
+	text,
+	system,
+	quoted,
+	me,
+	blocks,
+	attachments,
+	attachmentResolver,
+	mid,
+	rid,
+	username,
+  time,
+}) => [
+	...(attachments || []).map(
 			(attachment) =>
 				(attachment.audio_url && <AudioAttachment quoted={quoted} url={attachmentResolver(attachment.audio_url)} />) ||
 				(attachment.video_url && <VideoAttachment quoted={quoted} url={attachmentResolver(attachment.video_url)} />) ||
@@ -46,13 +69,25 @@ const renderContent = ({ text, system, quoted, me, blocks, attachments, attachme
 						attachmentResolver,
 					})),
 		),
-		text && (
-			<MessageBubble inverse={me} quoted={quoted} system={system}>
-				<MessageText text={text} system={system} />
-			</MessageBubble>
-		),
-		blocks && <MessageBlocks blocks={blocks} mid={mid} rid={rid} />,
-	].filter(Boolean);
+	text && (
+		<MessageBubble inverse={me} quoted={quoted} system={system}>
+			{!system && (
+				<span className={createClassName(styles, 'message--sr-only')}>
+					{me ? `${ i18next.t('i_say') } ` : `${ username } ${ i18next.t('says') } `}
+					{`${ parseDate(time) }:`}
+				</span>
+			)}
+			<MessageText text={text} system={system} />
+		</MessageBubble>
+	),
+	blocks && (
+		<MessageBlocks
+			blocks={blocks}
+			mid={mid}
+			rid={rid}
+		/>
+	),
+].filter(Boolean);
 
 const resolveWebRTCEndCallMessage = ({ webRtcCallEndTs, ts, t }) => {
 	const callEndTime = resolveDate(webRtcCallEndTs);

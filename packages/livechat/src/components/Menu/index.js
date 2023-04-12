@@ -1,5 +1,6 @@
 import { Component } from 'preact';
 
+import { addFocusFirstElement, handleTabKey } from '../../lib/keyNavigation';
 import { PopoverTrigger } from '../Popover';
 import { createClassName, normalizeDOMRect } from '../helpers';
 import styles from './styles.scss';
@@ -11,15 +12,24 @@ export const Menu = ({ children, hidden, placement, ...props }) => (
 );
 
 export const Group = ({ children, title, ...props }) => (
-	<div className={createClassName(styles, 'menu__group')} {...props}>
+	<div className={createClassName(styles, 'menu__group')} role='menu' {...props}>
 		{title && <div className={createClassName(styles, 'menu__group-title')}>{title}</div>}
 		{children}
 	</div>
 );
 
 export const Item = ({ children, primary, danger, disabled, icon, ...props }) => (
-	<button className={createClassName(styles, 'menu__item', { primary, danger, disabled })} disabled={disabled} {...props}>
-		{icon && <div className={createClassName(styles, 'menu__item__icon')}>{icon()}</div>}
+	<button
+		className={createClassName(styles, 'menu__item', { primary, danger, disabled })}
+		disabled={disabled}
+		role='menuitem'
+		{...props}
+	>
+		{icon && (
+			<div className={createClassName(styles, 'menu__item__icon')}>
+				{icon()}
+			</div>
+		)}
 		{children}
 	</button>
 );
@@ -39,6 +49,33 @@ class PopoverMenuWrapper extends Component {
 		dismiss();
 	};
 
+	handleCancel = () => {
+		const { dismiss } = this.props;
+		const { focusRef } = this.state;
+
+		if (focusRef) {
+			focusRef.focus();
+		}
+		
+		dismiss();
+	}
+
+	handleKeyDown = (event) => {
+		const { key } = event;
+
+		switch (key) {
+			case 'Tab':
+				handleTabKey(event, this.menuRef.base);
+				break;
+			case 'Escape':
+				this.handleCancel();
+				break;
+			default:
+				break;
+		}
+		event.stopPropagation();
+	}
+
 	componentDidMount() {
 		const { triggerBounds, overlayBounds } = this.props;
 		const menuBounds = normalizeDOMRect(this.menuRef.base.getBoundingClientRect());
@@ -57,10 +94,15 @@ class PopoverMenuWrapper extends Component {
 
 		const placement = `${menuWidth < rightSpace ? 'right' : 'left'}-${menuHeight < bottomSpace ? 'bottom' : 'top'}`;
 
+		addFocusFirstElement(this.menuRef.base);
+
+		const focusRef = document.activeElement;
+
 		// eslint-disable-next-line react/no-did-mount-set-state
 		this.setState({
 			position: { left, right, top, bottom },
 			placement,
+			focusRef,
 		});
 	}
 
@@ -70,6 +112,7 @@ class PopoverMenuWrapper extends Component {
 			style={{ position: 'absolute', ...this.state.position }}
 			placement={this.state.placement}
 			onClickCapture={this.handleClick}
+			onKeyDown={this.handleKeyDown}
 		>
 			{children}
 		</Menu>

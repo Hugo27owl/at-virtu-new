@@ -203,6 +203,7 @@ export class App extends Component {
 		if (i18n.t) {
 			document.dir = isRTL(i18n.t('yes')) ? 'rtl' : 'ltr';
 		}
+	
 	}
 
 	render = ({ sound, undocked, minimized, expanded, alerts, modal, iframe }, { initialized, poppedOut }) => {
@@ -230,10 +231,11 @@ export class App extends Component {
 			onOpenWindow: this.handleOpenWindow,
 			onDismissAlert: this.handleDismissAlert,
 			dismissNotification: this.dismissNotification,
+			handleKeyDown: this.handleKeyDown,
 		};
 
 		return (
-			<Router history={history} onChange={this.handleRoute}>
+			<Router history={history} onChange={this.handleRoute} ref={this.handleAppRef}>
 				<ChatConnector default path='/' {...screenProps} />
 				<ChatFinished path='/chat-finished' {...screenProps} />
 				<GDPRAgreement path='/gdpr' {...screenProps} />
