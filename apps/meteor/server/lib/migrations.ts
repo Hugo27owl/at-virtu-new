@@ -155,9 +155,17 @@ const maxAttempts = 30;
 const retryInterval = 10;
 let currentAttempt = 0;
 
-export async function migrateDatabase(targetVersion: 'latest' | number, subcommands?: string[]): Promise<boolean> {
+export async function migrateDatabase(
+	targetVersion: 'latest' | number,
+	subcommands?: string[],
+	onFreshInstall?: () => Promise<void>,
+): Promise<boolean> {
 	const control = await getControl();
 	const currentVersion = control.version;
+
+	if (control.version === 0 && typeof onFreshInstall === 'function') {
+		await onFreshInstall();
+	}
 
 	const orderedMigrations = getOrderedMigrations();
 

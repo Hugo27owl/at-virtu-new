@@ -1,3 +1,4 @@
+import { Accounts } from 'meteor/accounts-base';
 import { fetch } from 'meteor/fetch';
 import { OAuth } from 'meteor/oauth';
 import { ServiceConfiguration } from 'meteor/service-configuration';
@@ -44,7 +45,9 @@ const getTokenResponse = async function (query) {
 	const expiresIn = responseContent.expires_in;
 
 	if (!accessToken) {
-		throw new Error(`Failed to complete OAuth handshake with Linkedin -- can't find access token in HTTP response. ${JSON.stringify(responseContent)}`);
+		throw new Error(
+			`Failed to complete OAuth handshake with Linkedin -- can't find access token in HTTP response. ${JSON.stringify(responseContent)}`,
+		);
 	}
 
 	return {
@@ -56,9 +59,7 @@ const getTokenResponse = async function (query) {
 // Request available fields from profile
 const getIdentity = async function (accessToken) {
 	try {
-		const url = encodeURI(
-			`https://api.linkedin.com/v2/userinfo`,
-		);
+		const url = encodeURI(`https://api.linkedin.com/v2/userinfo`);
 		const request = await fetch(url, {
 			method: 'GET',
 			headers: {
@@ -93,7 +94,7 @@ OAuth.registerService('linkedin', 2, null, async (query) => {
 		lastName: family_name,
 		profilePicture: picture,
 		emailAddress: email,
-		email
+		email,
 	};
 
 	const serviceData = {

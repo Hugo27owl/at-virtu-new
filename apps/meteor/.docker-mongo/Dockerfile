@@ -1,4 +1,4 @@
-FROM node:14.21.3-bullseye-slim
+FROM node:20.9.0-bookworm-slim
 
 LABEL maintainer="buildmaster@rocket.chat"
 
@@ -30,7 +30,7 @@ ADD --chown=rocketchat:rocketchat . /app
 ADD --chown=rocketchat:rocketchat entrypoint.sh /app/bundle/
 
 RUN aptMark="$(apt-mark showmanual)" \
-    && apt-get install -y --no-install-recommends g++ make python ca-certificates \
+    && apt-get install -y --no-install-recommends g++ make python3 ca-certificates \
     && cd /app/bundle/programs/server \
     && npm install \
     && apt-mark auto '.*' > /dev/null \

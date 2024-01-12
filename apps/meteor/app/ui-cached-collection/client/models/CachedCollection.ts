@@ -173,20 +173,20 @@ export class CachedCollection<T extends { _id: string }, U = T> extends Emitter<
 		const data = await this.callLoad();
 		this.log(`${data.length} records loaded from server`);
 
-		data.forEach((record) => {
+		for await (const record of data) {
 			const newRecord = this.handleLoadFromServer(record);
 			if (!hasId(newRecord)) {
 				return;
 			}
 
 			const { _id } = newRecord;
-			this.collection.upsert({ _id } as Mongo.Selector<T>, newRecord);
+			await this.collection.upsertAsync({ _id } as Mongo.Selector<T>, newRecord);
 			this.emit('changed', newRecord as any); // TODO: investigate why this is needed
 
 			if (hasUpdatedAt(newRecord) && newRecord._updatedAt > this.updatedAt) {
 				this.updatedAt = newRecord._updatedAt;
 			}
-		});
+		}
 		this.updatedAt = this.updatedAt === lastTime ? startTime : this.updatedAt;
 	}
 
@@ -241,13 +241,13 @@ export class CachedCollection<T extends { _id: string }, U = T> extends Emitter<
 			}
 
 			if (action === 'removed') {
-				this.collection.remove(newRecord._id);
+				await this.collection.removeAsync(newRecord._id);
 			} else {
 				const { _id } = newRecord;
 				if (!_id) {
 					return;
 				}
-				this.collection.upsert({ _id } as any, newRecord);
+				await this.collection.upsertAsync({ _id } as Mongo.Selector<T>, newRecord);
 			}
 			await this.save();
 		});
@@ -289,9 +289,9 @@ export class CachedCollection<T extends { _id: string }, U = T> extends Emitter<
 
 				const actionTime = hasUpdatedAt(newRecord) ? newRecord._updatedAt : startTime;
 				changes.push({
-					action: () => {
+					action: async () => {
 						const { _id } = newRecord;
-						this.collection.upsert({ _id } as Mongo.Selector<T>, newRecord);
+						await this.collection.upsertAsync({ _id } as Mongo.Selector<T>, newRecord);
 						if (actionTime > this.updatedAt) {
 							this.updatedAt = actionTime;
 						}
@@ -314,9 +314,9 @@ export class CachedCollection<T extends { _id: string }, U = T> extends Emitter<
 
 				const actionTime = newRecord._deletedAt;
 				changes.push({
-					action: () => {
+					action: async () => {
 						const { _id } = newRecord;
-						this.collection.remove({ _id } as Mongo.Selector<T>);
+						await this.collection.removeAsync({ _id } as Mongo.Selector<T>);
 						if (actionTime > this.updatedAt) {
 							this.updatedAt = actionTime;
 						}
@@ -330,7 +330,7 @@ export class CachedCollection<T extends { _id: string }, U = T> extends Emitter<
 		changes
 			.sort((a, b) => a.timestamp - b.timestamp)
 			.forEach((c) => {
-				c.action();
+				void c.action();
 			});
 
 		this.updatedAt = this.updatedAt === lastTime ? startTime : this.updatedAt;

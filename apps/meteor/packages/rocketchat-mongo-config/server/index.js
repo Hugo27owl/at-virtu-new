@@ -1,8 +1,29 @@
-import tls from 'tls';
 import { PassThrough } from 'stream';
+import tls from 'tls';
 
 import { Email } from 'meteor/email';
+import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
+import { WebApp } from 'meteor/webapp';
+
+// TODO: replace all connect* references all over the codebase
+WebApp.connectHandlers = WebApp.handlers;
+WebApp.rawConnectHandlers = WebApp.rawHandlers;
+Meteor.users.createIndex = function () {
+	console.error('Meteor.users.createIndex');
+};
+Mongo.Collection.prototype._ensureIndex = function () {
+	console.error('Calling _ensureIndex from collection', this._name);
+};
+Mongo.Collection.prototype._insert = function () {
+	console.error('Calling _insert from collection', this._name);
+};
+Mongo.Collection.prototype.update = function () {
+	console.error('Calling _update from collection', this._name);
+};
+
+// Temporal since still being used in some places
+Promise.await = Promise.await || ((promise) => promise);
 
 const shouldUseNativeOplog = ['yes', 'true'].includes(String(process.env.USE_NATIVE_OPLOG).toLowerCase());
 if (!shouldUseNativeOplog) {

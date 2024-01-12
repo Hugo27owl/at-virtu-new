@@ -40,7 +40,7 @@ export function useOpenRoom({ type, reference }: { type: RoomType; reference: st
 					const { rid } = await createDirectMessage(...reference.split(', '));
 					const { ChatSubscription } = await import('../../../../app/models/client');
 					const { waitUntilFind } = await import('../../../lib/utils/waitUntilFind');
-					await waitUntilFind(() => ChatSubscription.findOne({ rid }));
+					await waitUntilFind(() => ChatSubscription.findOneAsync({ rid }));
 					directRoute.push({ rid }, (prev) => prev);
 				} catch (error) {
 					throw new RoomNotFoundError(undefined, { type, reference });
@@ -66,8 +66,8 @@ export function useOpenRoom({ type, reference }: { type: RoomType; reference: st
 
 			const { ChatRoom, ChatSubscription } = await import('../../../../app/models/client');
 
-			ChatRoom.upsert({ _id: roomData._id }, { $set, $unset });
-			const room = ChatRoom.findOne({ _id: roomData._id });
+			await ChatRoom.upsertAsync({ _id: roomData._id }, { $set, $unset });
+			const room = await ChatRoom.findOneAsync({ _id: roomData._id });
 
 			if (!room) {
 				throw new TypeError('room is undefined');
@@ -95,7 +95,7 @@ export function useOpenRoom({ type, reference }: { type: RoomType; reference: st
 			}
 
 			// update user's room subscription
-			const sub = ChatSubscription.findOne({ rid: room._id });
+			const sub = await ChatSubscription.findOneAsync({ rid: room._id });
 			if (sub && !sub.open) {
 				await openRoom(room._id);
 			}

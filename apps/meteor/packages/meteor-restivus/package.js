@@ -5,10 +5,7 @@ Package.describe({
 	git: 'https://github.com/kahmali/meteor-restivus.git',
 });
 
-Package.onUse(function (api) {
-	// Minimum Meteor version
-	api.versionsFrom('2.5');
-
+Package.onUse((api) => {
 	// Meteor dependencies
 	api.use('check');
 	api.use('webapp');
