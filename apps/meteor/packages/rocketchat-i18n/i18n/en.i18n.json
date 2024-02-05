@@ -6287,5 +6287,6 @@
   "Unlimited_seats_MACs": "Unlimited seats and MACs",
   "Seat_limit_reached": "Seat limit reached",
   "Seat_limit_reached_Description": "Your workspace reached its contractual seat limit. Buy more seats to add more users.",
-  "Buy_more_seats": "Buy more seats"
+  "Buy_more_seats": "Buy more seats",
+  "Search_importer": "Search importer"
 }
