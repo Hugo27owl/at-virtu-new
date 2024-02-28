@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import UserInfo from '../../../components/UserInfo';
 import { useActionSpread } from '../../hooks/useActionSpread';
+import type { IAdminUserTabs } from './IAdminUserTabs';
 import { useChangeAdminStatusAction } from './hooks/useChangeAdminStatusAction';
 import { useChangeUserStatusAction } from './hooks/useChangeUserStatusAction';
 import { useDeleteUserAction } from './hooks/useDeleteUserAction';
@@ -20,6 +21,7 @@ type AdminUserInfoActionsProps = {
 	isAdmin: boolean;
 	onChange: () => void;
 	onReload: () => void;
+	tab: IAdminUserTabs;
 };
 
 // TODO: Replace menu
@@ -31,6 +33,7 @@ const AdminUserInfoActions = ({
 	isAdmin,
 	onChange,
 	onReload,
+	tab,
 }: AdminUserInfoActionsProps): ReactElement => {
 	const t = useTranslation();
 	const directRoute = useRoute('direct');
@@ -81,24 +84,25 @@ const AdminUserInfoActions = ({
 					disabled: isFederatedUser,
 				},
 			}),
-			...(changeAdminStatusAction && !isFederatedUser && { makeAdmin: changeAdminStatusAction }),
-			...(resetE2EKeyAction && !isFederatedUser && { resetE2EKey: resetE2EKeyAction }),
-			...(resetTOTPAction && !isFederatedUser && { resetTOTP: resetTOTPAction }),
-			...(deleteUserAction && { delete: deleteUserAction }),
+			...(changeAdminStatusAction && !isFederatedUser && tab !== 'deactivated' && { makeAdmin: changeAdminStatusAction }),
+			...(resetE2EKeyAction && !isFederatedUser && tab !== 'deactivated' && { resetE2EKey: resetE2EKeyAction }),
+			...(resetTOTPAction && !isFederatedUser && tab !== 'deactivated' && { resetTOTP: resetTOTPAction }),
 			...(changeUserStatusAction && !isFederatedUser && { changeActiveStatus: changeUserStatusAction }),
+			...(deleteUserAction && { delete: deleteUserAction }),
 		}),
 		[
-			t,
 			canDirectMessage,
+			t,
 			directMessageClick,
 			canEditOtherUserInfo,
+			isFederatedUser,
 			editUserClick,
 			changeAdminStatusAction,
-			changeUserStatusAction,
-			deleteUserAction,
+			tab,
 			resetE2EKeyAction,
 			resetTOTPAction,
-			isFederatedUser,
+			changeUserStatusAction,
+			deleteUserAction,
 		],
 	);
 
@@ -117,7 +121,13 @@ const AdminUserInfoActions = ({
 				secondary
 				flexShrink={0}
 				key='menu'
-				renderItem={({ label: { label, icon }, ...props }): ReactElement => <Option label={label} title={label} icon={icon} {...props} />}
+				renderItem={({ label: { label, icon }, ...props }): ReactElement =>
+					label === 'Delete' ? (
+						<Option label={label} title={label} icon={icon} variant='danger' {...props} />
+					) : (
+						<Option label={label} title={label} icon={icon} {...props} />
+					)
+				}
 				options={menuOptions}
 			/>
 		);

@@ -15,13 +15,15 @@ import UserInfo from '../../../components/UserInfo';
 import { UserStatus } from '../../../components/UserStatus';
 import { getUserEmailVerified } from '../../../lib/utils/getUserEmailVerified';
 import AdminUserInfoActions from './AdminUserInfoActions';
+import type { IAdminUserTabs } from './IAdminUserTabs';
 
 type AdminUserInfoWithDataProps = {
 	uid: IUser['_id'];
 	onReload: () => void;
+	tab: IAdminUserTabs;
 };
 
-const AdminUserInfoWithData = ({ uid, onReload }: AdminUserInfoWithDataProps): ReactElement => {
+const AdminUserInfoWithData = ({ uid, onReload, tab }: AdminUserInfoWithDataProps): ReactElement => {
 	const t = useTranslation();
 	const getRoles = useRolesDescription();
 	const approveManuallyUsers = useSetting('Accounts_ManuallyApproveNewUsers');
@@ -69,6 +71,7 @@ const AdminUserInfoWithData = ({ uid, onReload }: AdminUserInfoWithDataProps): R
 			lastLogin,
 			nickname,
 			canViewAllInfo,
+			reason,
 		} = data.user;
 
 		return {
@@ -91,6 +94,7 @@ const AdminUserInfoWithData = ({ uid, onReload }: AdminUserInfoWithDataProps): R
 			status: <UserStatus status={status} />,
 			statusText,
 			nickname,
+			reason,
 		};
 	}, [approveManuallyUsers, data, getRoles]);
 
@@ -119,9 +123,10 @@ const AdminUserInfoWithData = ({ uid, onReload }: AdminUserInfoWithDataProps): R
 					isAdmin={data?.user.roles?.includes('admin')}
 					userId={data?.user._id}
 					username={user.username}
-					isFederatedUser={isUserFederated(data?.user as unknown as IUser)}
+					isFederatedUser={isUserFederated(data?.user)}
 					onChange={onChange}
 					onReload={onReload}
+					tab={tab}
 				/>
 			}
 		/>
