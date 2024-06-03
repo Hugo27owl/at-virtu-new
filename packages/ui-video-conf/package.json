@@ -20,14 +20,11 @@
 		"@storybook/react": "~6.5.16",
 		"@storybook/testing-library": "~0.0.13",
 		"@types/babel__core": "~7.20.3",
-		"@types/jest": "~29.5.12",
 		"eslint": "~8.45.0",
 		"eslint-plugin-react": "~7.32.2",
 		"eslint-plugin-react-hooks": "~4.6.0",
 		"eslint-plugin-storybook": "~0.6.15",
-		"jest": "~29.7.0",
 		"react-docgen-typescript-plugin": "~1.0.5",
-		"ts-jest": "~29.1.1",
 		"typescript": "~5.3.3"
 	},
 	"peerDependencies": {
@@ -44,7 +41,6 @@
 	"scripts": {
 		"eslint": "eslint --ext .js,.jsx,.ts,.tsx .",
 		"eslint:fix": "eslint --ext .js,.jsx,.ts,.tsx . --fix",
-		"test": "jest",
 		"build": "tsc -p tsconfig.json",
 		"storybook": "start-storybook -p 6006",
 		"dev": "tsc -p tsconfig.json --watch --preserveWatchOutput"
