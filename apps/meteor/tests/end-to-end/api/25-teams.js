@@ -1301,7 +1301,7 @@ describe('[Teams]', () => {
 		});
 
 		it('should throw an error if no permission', (done) => {
-			updatePermission('add-team-channel', []).then(() => {
+			updatePermission('move-room-to-team', []).then(() => {
 				request
 					.post(api('teams.addRooms'))
 					.set(credentials)
@@ -1321,7 +1321,7 @@ describe('[Teams]', () => {
 		});
 
 		it('should add public and private rooms to team', (done) => {
-			updatePermission('add-team-channel', ['admin']).then(() => {
+			updatePermission('move-room-to-team', ['admin']).then(() => {
 				request
 					.post(api('teams.addRooms'))
 					.set(credentials)
@@ -1350,7 +1350,7 @@ describe('[Teams]', () => {
 		});
 
 		it('should add public room to private team', (done) => {
-			updatePermission('add-team-channel', ['admin']).then(() => {
+			updatePermission('move-room-to-team', ['admin']).then(() => {
 				request
 					.post(api('teams.addRooms'))
 					.set(credentials)
@@ -1371,7 +1371,7 @@ describe('[Teams]', () => {
 		});
 
 		it('should add private room to team', (done) => {
-			updatePermission('add-team-channel', ['admin']).then(() => {
+			updatePermission('move-room-to-team', ['admin']).then(() => {
 				request
 					.post(api('teams.addRooms'))
 					.set(credentials)
@@ -1392,7 +1392,7 @@ describe('[Teams]', () => {
 		});
 
 		it('should fail if the user cannot access the channel', (done) => {
-			updatePermission('add-team-channel', ['admin', 'user'])
+			updatePermission('move-room-to-team', ['admin', 'user'])
 				.then(() => {
 					request
 						.post(api('teams.addRooms'))
