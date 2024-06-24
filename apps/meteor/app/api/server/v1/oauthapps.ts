@@ -27,7 +27,7 @@ API.v1.addRoute(
 	{ authRequired: true, validateParams: isOauthAppsGetParams },
 	{
 		async get() {
-			if (!(await hasPermissionAsync(this.userId, 'manage-oauth-apps'))) {
+			if (!(await hasPermissionAsync(this.userId, 'view-oauth-apps'))) {
 				return API.v1.unauthorized();
 			}
 

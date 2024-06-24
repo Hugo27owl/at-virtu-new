@@ -76,7 +76,7 @@ describe('[OAuthApps]', function () {
 				.end(done);
 		});
 		it('should return a 403 Forbidden error when the user does not have the necessary permission by client id', (done) => {
-			updatePermission('manage-oauth-apps', []).then(() => {
+			updatePermission('view-oauth-apps', []).then(() => {
 				request
 					.get(api('oauth-apps.get?clientId=zapier'))
 					.set(credentials)
@@ -89,7 +89,7 @@ describe('[OAuthApps]', function () {
 			});
 		});
 		it('should return a 403 Forbidden error when the user does not have the necessary permission by app id', (done) => {
-			updatePermission('manage-oauth-apps', []).then(() => {
+			updatePermission('view-oauth-apps', []).then(() => {
 				request
 					.get(api('oauth-apps.get?appId=zapier'))
 					.set(credentials)
