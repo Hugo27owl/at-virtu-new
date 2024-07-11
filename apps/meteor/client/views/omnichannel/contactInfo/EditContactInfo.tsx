@@ -1,11 +1,12 @@
 import type { ILivechatVisitor, Serialized } from '@rocket.chat/core-typings';
 import { Field, FieldLabel, FieldRow, FieldError, TextInput, ButtonGroup, Button } from '@rocket.chat/fuselage';
+import { useUniqueId } from '@rocket.chat/fuselage-hooks';
 import { CustomFieldsForm } from '@rocket.chat/ui-client';
 import { useToastMessageDispatch, useEndpoint, useTranslation } from '@rocket.chat/ui-contexts';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import { hasAtLeastOnePermission } from '../../../../app/authorization/client';
 import { validateEmail } from '../../../../lib/emailValidator';
@@ -72,8 +73,7 @@ const EditContactInfo = ({ id, contactData, onClose, onCancel }: ContactNewEditP
 	const queryClient = useQueryClient();
 	const handleNavigate = useContactRoute();
 
-	const canViewCustomFields = (): boolean =>
-		hasAtLeastOnePermission(['view-livechat-room-customfields', 'edit-livechat-room-customfields']);
+	const canViewCustomFields = hasAtLeastOnePermission(['view-livechat-room-customfields', 'edit-livechat-room-customfields']);
 
 	const [userId, setUserId] = useState('no-agent-selected');
 	const saveContact = useEndpoint('POST', '/v1/omnichannel/contact');
@@ -82,15 +82,14 @@ const EditContactInfo = ({ id, contactData, onClose, onCancel }: ContactNewEditP
 
 	const { data: customFieldsMetadata = [], isInitialLoading: isLoadingCustomFields } = useCustomFieldsMetadata({
 		scope: 'visitor',
-		enabled: canViewCustomFields(),
+		enabled: canViewCustomFields,
 	});
 
 	const initialValue = getInitialValues(contactData);
 	const { username: initialUsername } = initialValue;
 
 	const {
-		register,
-		formState: { errors, isValid, isDirty, isSubmitting },
+		formState: { errors, isSubmitting },
 		control,
 		setValue,
 		handleSubmit,
@@ -100,6 +99,10 @@ const EditContactInfo = ({ id, contactData, onClose, onCancel }: ContactNewEditP
 		reValidateMode: 'onChange',
 		defaultValues: initialValue,
 	});
+
+	const nameFieldId = useUniqueId();
+	const emailFieldId = useUniqueId();
+	const phoneFieldId = useUniqueId();
 
 	useEffect(() => {
 		if (!initialUsername) {
@@ -132,8 +135,6 @@ const EditContactInfo = ({ id, contactData, onClose, onCancel }: ContactNewEditP
 		const { contact } = await getContactBy(query);
 		return !contact || contact._id === id;
 	};
-
-	const validateName = (v: string): string | boolean => (!v.trim() ? t('The_field_is_required', t('Name')) : true);
 
 	const handleContactManagerChange = async (userId: string): Promise<void> => {
 		setUserId(userId);
@@ -201,43 +202,57 @@ const EditContactInfo = ({ id, contactData, onClose, onCancel }: ContactNewEditP
 			</ContextualbarHeader>
 			<ContextualbarScrollableContent is='form' onSubmit={handleSubmit(handleSave)}>
 				<Field>
-					<FieldLabel>{t('Name')}*</FieldLabel>
+					<FieldLabel htmlFor={nameFieldId} required>
+						{t('Name')}
+					</FieldLabel>
 					<FieldRow>
-						<TextInput {...register('name', { validate: validateName })} error={errors.name?.message} flexGrow={1} />
+						<Controller
+							name='name'
+							control={control}
+							rules={{ validate: (name) => (!name.trim() ? t('The_field_is_required', t('Name')) : true) }}
+							render={({ field }) => (
+								<TextInput
+									{...field}
+									id={nameFieldId}
+									error={errors.name?.message}
+									aria-invalid={Boolean(errors.name)}
+									aria-describedby={`${nameFieldId}-error`}
+								/>
+							)}
+						/>
 					</FieldRow>
-					<FieldError>{errors.name?.message}</FieldError>
+					<FieldError id={`${nameFieldId}-error`}>{errors.name?.message}</FieldError>
 				</Field>
 				<Field>
-					<FieldLabel>{t('Email')}</FieldLabel>
+					<FieldLabel htmlFor={emailFieldId}>{t('Email')}</FieldLabel>
 					<FieldRow>
-						<TextInput {...register('email', { validate: validateEmailFormat })} error={errors.email?.message} flexGrow={1} />
+						<Controller
+							name='email'
+							control={control}
+							rules={{ validate: validateEmailFormat }}
+							render={({ field }) => <TextInput {...field} id={emailFieldId} error={errors.email?.message} />}
+						/>
 					</FieldRow>
 					<FieldError>{errors.email?.message}</FieldError>
 				</Field>
 				<Field>
-					<FieldLabel>{t('Phone')}</FieldLabel>
+					<FieldLabel htmlFor={phoneFieldId}>{t('Phone')}</FieldLabel>
 					<FieldRow>
-						<TextInput {...register('phone')} error={errors.phone?.message} flexGrow={1} />
+						<Controller
+							name='phone'
+							control={control}
+							render={({ field }) => <TextInput {...field} id={phoneFieldId} error={errors.phone?.message} />}
+						/>
 					</FieldRow>
 					<FieldError>{errors.phone?.message}</FieldError>
 				</Field>
-				{canViewCustomFields() && <CustomFieldsForm formName='customFields' formControl={control} metadata={customFieldsMetadata} />}
+				{canViewCustomFields && <CustomFieldsForm formName='customFields' formControl={control} metadata={customFieldsMetadata} />}
 				<ContactManagerForm value={userId} handler={handleContactManagerChange} />
 			</ContextualbarScrollableContent>
 			<ContextualbarFooter>
 				<ButtonGroup stretch>
-					<Button flexGrow={1} onClick={onCancel}>
-						{t('Cancel')}
-					</Button>
-					<Button
-						mie='none'
-						type='submit'
-						onClick={handleSubmit(handleSave)}
-						flexGrow={1}
-						loading={isSubmitting}
-						disabled={!isValid || !isDirty}
-						primary
-					>
+					<Button onClick={onCancel}>{t('Cancel')}</Button>
+					<Button type='submit' onClick={handleSubmit(handleSave)} loading={isSubmitting} primary>
 						{t('Save')}
 					</Button>
 				</ButtonGroup>
