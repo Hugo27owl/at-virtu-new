@@ -29,7 +29,10 @@ declare module '@rocket.chat/rest-typings' {
 			POST: (params: VoipFreeSwitchExtensionAssignProps) => void;
 		};
 		'/v1/voip-freeswitch.extension.getRegistrationInfoByUserId': {
-			GET: (params: VoipFreeSwitchExtensionGetInfoProps) => { extension: FreeSwitchExtension; credentials: { password: string } };
+			GET: (params: VoipFreeSwitchExtensionGetInfoProps) => {
+				extension: FreeSwitchExtension;
+				credentials: { password: string; websocketPath: string };
+			};
 		};
 	}
 }
