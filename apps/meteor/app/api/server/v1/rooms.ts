@@ -140,6 +140,7 @@ API.v1.addRoute(
 	},
 );
 
+// TODO: deprecate API
 API.v1.addRoute(
 	'rooms.upload/:rid',
 	{
