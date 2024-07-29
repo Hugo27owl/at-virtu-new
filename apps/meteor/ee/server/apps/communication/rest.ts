@@ -93,11 +93,15 @@ export class AppsRestApi {
 			{
 				async get() {
 					const baseUrl = orchestrator.getMarketplaceUrl();
-					const workspaceId = settings.get('Cloud_Workspace_Id');
+					const workspaceIdSetting = await Settings.findOneById('Cloud_Workspace_Id');
+					if (!workspaceIdSetting) {
+						return API.v1.failure('No workspace id found');
+					}
+
 					const { action, appId, appVersion } = this.queryParams;
 
 					return API.v1.success({
-						url: `${baseUrl}/apps/${appId}/incompatible/${appVersion}/${action}?workspaceId=${workspaceId}&rocketChatVersion=${rocketChatVersion}`,
+						url: `${baseUrl}/apps/${appId}/incompatible/${appVersion}/${action}?workspaceId=${workspaceIdSetting.value}&rocketChatVersion=${rocketChatVersion}`,
 					});
 				},
 			},
@@ -180,7 +184,10 @@ export class AppsRestApi {
 				async get() {
 					const baseUrl = orchestrator.getMarketplaceUrl();
 
-					const workspaceId = settings.get('Cloud_Workspace_Id');
+					const workspaceIdSetting = await Settings.findOneById('Cloud_Workspace_Id');
+					if (!workspaceIdSetting) {
+						return API.v1.failure('No workspace id found');
+					}
 
 					if (!this.queryParams.purchaseType || !purchaseTypes.has(this.queryParams.purchaseType)) {
 						return API.v1.failure({ error: 'Invalid purchase type' });
@@ -198,7 +205,7 @@ export class AppsRestApi {
 					return API.v1.success({
 						url: `${baseUrl}/apps/${this.queryParams.appId}/${
 							this.queryParams.purchaseType === 'buy' ? this.queryParams.purchaseType : subscribeRoute
-						}?workspaceId=${workspaceId}&token=${response.token}&seats=${seats}`,
+						}?workspaceId=${workspaceIdSetting.value}&token=${response.token}&seats=${seats}`,
 					});
 				},
 			},
@@ -280,7 +287,11 @@ export class AppsRestApi {
 						this.queryParams.appId
 					) {
 						apiDeprecationLogger.endpoint(this.request.route, '7.0.0', this.response, 'Use /apps/buildExternalUrl to get the modal URLs.');
-						const workspaceId = settings.get('Cloud_Workspace_Id');
+
+						const workspaceIdSetting = await Settings.findOneById('Cloud_Workspace_Id');
+						if (!workspaceIdSetting) {
+							return API.v1.failure('No workspace id found');
+						}
 
 						if (!this.queryParams.purchaseType || !purchaseTypes.has(this.queryParams.purchaseType)) {
 							return API.v1.failure({ error: 'Invalid purchase type' });
@@ -298,7 +309,7 @@ export class AppsRestApi {
 						return API.v1.success({
 							url: `${baseUrl}/apps/${this.queryParams.appId}/${
 								this.queryParams.purchaseType === 'buy' ? this.queryParams.purchaseType : subscribeRoute
-							}?workspaceId=${workspaceId}&token=${token.token}&seats=${seats}`,
+							}?workspaceId=${workspaceIdSetting.value}&token=${token.token}&seats=${seats}`,
 						});
 					}
 					apiDeprecationLogger.endpoint(this.request.route, '7.0.0', this.response, 'Use /apps/installed to get the installed apps list.');
@@ -444,7 +455,11 @@ export class AppsRestApi {
 					}
 
 					const baseUrl = orchestrator.getMarketplaceUrl();
-					const workspaceId = settings.get<string>('Cloud_Workspace_Id');
+
+					const workspaceIdSetting = await Settings.findOneById('Cloud_Workspace_Id');
+					if (!workspaceIdSetting) {
+						return API.v1.failure('No workspace id found');
+					}
 
 					const requester = {
 						id: this.user._id,
@@ -482,7 +497,7 @@ export class AppsRestApi {
 					}
 
 					const queryParams = new URLSearchParams();
-					queryParams.set('workspaceId', workspaceId);
+					queryParams.set('workspaceId', workspaceIdSetting.value as string);
 					queryParams.set('frameworkVersion', appsEngineVersionForMarketplace);
 					queryParams.set('requester', Buffer.from(JSON.stringify(requester)).toString('base64'));
 					queryParams.set('admins', Buffer.from(JSON.stringify(admins)).toString('base64'));
