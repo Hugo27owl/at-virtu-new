@@ -1,6 +1,6 @@
 import type { IMessageService } from '@rocket.chat/core-services';
 import { Authorization, ServiceClassInternal } from '@rocket.chat/core-services';
-import { type IMessage, type MessageTypesValues, type IUser, type IRoom, isEditedMessage } from '@rocket.chat/core-typings';
+import { type IMessage, type MessageTypesValues, type IUser, type IRoom, isEditedMessage, isMessageFromMatrixFederation, isRoomFederated } from '@rocket.chat/core-typings';
 import { Messages, Rooms } from '@rocket.chat/models';
 
 import { deleteMessage } from '../../../app/lib/server/functions/deleteMessage';
@@ -19,6 +19,7 @@ import { BeforeSaveMarkdownParser } from './hooks/BeforeSaveMarkdownParser';
 import { mentionServer } from './hooks/BeforeSaveMentions';
 import { BeforeSavePreventMention } from './hooks/BeforeSavePreventMention';
 import { BeforeSaveSpotify } from './hooks/BeforeSaveSpotify';
+import { isFederationEnabled, isFederationReady, FederationMatrixInvalidConfigurationError } from '../federation/utils';
 
 const disableMarkdownParser = ['yes', 'true'].includes(String(process.env.DISABLE_MESSAGE_PARSER).toLowerCase());
 
@@ -140,6 +141,10 @@ export class MessageService extends ServiceClassInternal implements IMessageServ
 		// TODO looks like this one was not being used (so I'll left it commented)
 		// await this.joinDiscussionOnMessage({ message, room, user });
 
+		if ((isMessageFromMatrixFederation(message) || isRoomFederated(room)) && isFederationEnabled() && !isFederationReady()) {
+			throw new FederationMatrixInvalidConfigurationError('Unable to send message');
+		}
+
 		message = await mentionServer.execute(message);
 		message = await this.cannedResponse.replacePlaceholders({ message, room, user });
 		message = await this.badWords.filterBadWords({ message });
@@ -209,4 +214,16 @@ export class MessageService extends ServiceClassInternal implements IMessageServ
 
 	// 	await Room.join({ room, user });
 	// }
+
+	async beforeReacted(message: IMessage, room: IRoom) {
+		if ((isMessageFromMatrixFederation(message) || isRoomFederated(room)) && isFederationEnabled() && !isFederationReady()) {
+			throw new FederationMatrixInvalidConfigurationError('Unable to react to message');
+		}
+	}
+
+	async beforeDelete(message: IMessage, room: IRoom) {
+		if ((isMessageFromMatrixFederation(message) || isRoomFederated(room)) && isFederationEnabled() && !isFederationReady()) {
+			throw new FederationMatrixInvalidConfigurationError('Unable to delete message');
+		}
+	}
 }
