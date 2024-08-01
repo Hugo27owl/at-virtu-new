@@ -1,3 +1,4 @@
+import type { SidepanelItems } from '@rocket.chat/core-typings';
 import {
 	Box,
 	Button,
@@ -38,6 +39,8 @@ type CreateTeamModalInputs = {
 	encrypted: boolean;
 	broadcast: boolean;
 	members?: string[];
+	showDiscussions?: boolean;
+	showChannels?: boolean;
 };
 
 type CreateTeamModalProps = { onClose: () => void };
@@ -48,6 +51,7 @@ const CreateTeamModal = ({ onClose }: CreateTeamModalProps) => {
 	const e2eEnabledForPrivateByDefault = useSetting('E2E_Enabled_Default_PrivateRooms');
 	const namesValidation = useSetting('UTF8_Channel_Names_Validation');
 	const allowSpecialNames = useSetting('UI_Allow_room_names_with_special_chars');
+
 	const dispatchToastMessage = useToastMessageDispatch();
 	const canCreateTeam = usePermission('create-team');
 	const canSetReadOnly = usePermissionWithScopedRoles('set-readonly', ['owner']);
@@ -92,6 +96,8 @@ const CreateTeamModal = ({ onClose }: CreateTeamModalProps) => {
 			encrypted: (e2eEnabledForPrivateByDefault as boolean) ?? false,
 			broadcast: false,
 			members: [],
+			showChannels: false,
+			showDiscussions: false,
 		},
 	});
 
@@ -121,7 +127,13 @@ const CreateTeamModal = ({ onClose }: CreateTeamModalProps) => {
 		topic,
 		broadcast,
 		encrypted,
+		showChannels,
+		showDiscussions,
 	}: CreateTeamModalInputs): Promise<void> => {
+		const sidepanelItems = [showChannels && 'channel', showDiscussions && 'discussion'].filter(Boolean) as [
+			SidepanelItems,
+			SidepanelItems?,
+		];
 		const params = {
 			name,
 			members,
@@ -134,6 +146,7 @@ const CreateTeamModal = ({ onClose }: CreateTeamModalProps) => {
 					encrypted,
 				},
 			},
+			...(showChannels && { sidepanel: { items: sidepanelItems } }),
 		};
 
 		try {
@@ -155,6 +168,7 @@ const CreateTeamModal = ({ onClose }: CreateTeamModalProps) => {
 	const encryptedId = useUniqueId();
 	const broadcastId = useUniqueId();
 	const addMembersId = useUniqueId();
+	const showChannelsId = useUniqueId();
 
 	return (
 		<Modal
@@ -285,6 +299,25 @@ const CreateTeamModal = ({ onClose }: CreateTeamModalProps) => {
 							/>
 						</FieldRow>
 						{broadcast && <FieldDescription id={`${broadcastId}-hint`}>{t('Teams_New_Broadcast_Description')}</FieldDescription>}
+					</Field>
+
+					<Field>
+						<FieldRow>
+							<FieldLabel htmlFor={showChannelsId}>{t('Channels')}</FieldLabel>
+							<Controller
+								control={control}
+								name='showChannels'
+								render={({ field: { onChange, value, ref } }): ReactElement => (
+									<ToggleSwitch
+										aria-describedby={`${showChannelsId}-hint`}
+										id={showChannelsId}
+										onChange={onChange}
+										checked={value}
+										ref={ref}
+									/>
+								)}
+							/>
+						</FieldRow>
 					</Field>
 				</FieldGroup>
 			</Modal.Content>
