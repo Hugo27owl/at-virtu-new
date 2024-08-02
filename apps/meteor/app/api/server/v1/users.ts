@@ -1314,6 +1314,8 @@ API.v1.addRoute(
 						},
 					);
 
+					void notifyOnUserChange({ clientAction: 'updated', id: user._id, diff: { status } });
+
 					const { _id, username, statusText, roles, name } = user;
 					void api.broadcast('presence.status', {
 						user: { status, _id, username, statusText, roles, name },
