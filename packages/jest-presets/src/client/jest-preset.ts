@@ -5,7 +5,7 @@ export default {
 	errorOnDeprecated: true,
 
 	transform: {
-		'^.+\\.(t|j)sx?$': [
+		'^.+\\.m?(t|j)sx?$': [
 			'@swc/jest',
 			{
 				sourceMaps: true,
@@ -26,6 +26,9 @@ export default {
 			},
 		],
 	},
+	moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'mjs'],
+
+	transformIgnorePatterns: ['/node_modules/(?!@testing-library/)'],
 
 	moduleNameMapper: {
 		'\\.css$': 'identity-obj-proxy',
