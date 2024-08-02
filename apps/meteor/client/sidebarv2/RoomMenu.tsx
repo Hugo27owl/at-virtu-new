@@ -177,13 +177,18 @@ const RoomMenu = ({
 				await readMessages({ rid, readThreads: true });
 				return;
 			}
-			await unreadMessages(undefined, rid);
+
 			if (subscription == null) {
 				return;
 			}
+
 			LegacyRoomManager.close(subscription.t + subscription.name);
 
-			router.navigate('/home');
+			if (roomOpen) {
+				router.navigate('/home');
+			}
+
+			await unreadMessages(undefined, rid);
 		} catch (error) {
 			dispatchToastMessage({ type: 'error', message: error });
 		}
