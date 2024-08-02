@@ -2047,6 +2047,12 @@ export class LivechatRoomsRaw extends BaseRaw<IOmnichannelRoom> implements ILive
 		const agentLastReply = room.metrics?.servedBy ? room.metrics.servedBy.lr : room.ts;
 
 		if (message.token) {
+			// update visitor timestamp, only if its not a system message
+			if (!message.t) {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				update.$set!['v.lastMessageTs'] = message.ts;
+			}
+
 			// update visitor timestamp, only if its new inquiry and not continuing message
 			if (agentLastReply >= visitorLastQuery) {
 				// if first query, not continuing query from visitor
@@ -2377,19 +2383,6 @@ export class LivechatRoomsRaw extends BaseRaw<IOmnichannelRoom> implements ILive
 		};
 
 		return this.deleteOne(query);
-	}
-
-	setVisitorLastMessageTimestampByRoomId(roomId: string, lastMessageTs: Date) {
-		const query = {
-			_id: roomId,
-		};
-		const update = {
-			$set: {
-				'v.lastMessageTs': lastMessageTs,
-			},
-		};
-
-		return this.updateOne(query, update);
 	}
 
 	setVisitorInactivityInSecondsById(roomId: string, visitorInactivity: number) {
