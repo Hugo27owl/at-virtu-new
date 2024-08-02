@@ -107,6 +107,38 @@ describe('[OAuthApps]', () => {
 		});
 	});
 
+	describe('[/oauth-apps.info]', () => {
+		before(() => updatePermission('manage-oauth-apps', []));
+		after(() => updatePermission('manage-oauth-apps', ['admin']));
+
+		it('should return a single oauthApp with only client id and name attributes', async () => {
+			await request
+				.get(api('oauth-apps.info'))
+				.query({ clientId: 'zapier' })
+				.set(credentials)
+				.expect(200)
+				.expect((res) => {
+					expect(res.body).to.have.property('success', true);
+					expect(res.body).to.have.property('oauthApp');
+					expect(res.body.oauthApp.clientId).to.be.equal('zapier');
+					expect(res.body.oauthApp).to.have.keys(['clientId', 'name']);
+					expect(Object.keys(res.body.oauthApp)).to.have.length(2);
+				});
+		});
+
+		it('should return an error when the oauthApp is not found by clientId', async () => {
+			await request
+				.get(api('oauth-apps.info'))
+				.query({ clientId: 'not-exist' })
+				.set(credentials)
+				.expect(400)
+				.expect((res) => {
+					expect(res.body).to.have.property('success', false);
+					expect(res.body).to.have.property('error', 'OAuth app not found.');
+				});
+		});
+	});
+
 	describe('[/oauth-apps.create]', () => {
 		it('should return an error when the user does not have the necessary permission', async () => {
 			await updatePermission('manage-oauth-apps', []);
